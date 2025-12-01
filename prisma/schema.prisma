@@ -1,0 +1,114 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/client"
+
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(uuid())
+
+  email     String   @unique
+  firstName String?
+  lastName  String?
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  applications Application[]
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model Application {
+  id        String            @id @default(uuid())
+  type      ApplicationType
+  status    ApplicationStatus @default(DRAFT)
+  userId    String
+  user      User              @relation(fields: [userId], references: [id])
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  documents Document[]
+}
+
+enum ApplicationType {
+  REGULAR
+  BUSINESS
+  DIPLOMATIC
+  VISA
+}
+
+enum ApplicationStatus {
+  DRAFT
+  SUBMITTED
+  IN_REVIEW
+  APPROVED
+  REJECTED
+  COMPLETED
+}
+
+model Document {
+  id            String       @id @default(uuid())
+  name          String
+  url           String
+  type          DocumentType
+  applicationId String
+  application   Application  @relation(fields: [applicationId], references: [id])
+  createdAt     DateTime     @default(now())
+}
+
+enum DocumentType {
+  PASSPORT_PHOTO
+  ID_CARD
+  BIRTH_CERTIFICATE
+  PROOF_OF_PAYMENT
+  OTHER
+}
+
+model Service {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  icon        String
+  features    String[]
+  cta         String
+  href        String
+  color       String
+  bgColor     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Testimonial {
+  id        String   @id @default(uuid())
+  name      String
+  role      String
+  content   String
+  rating    Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model FAQ {
+  id        String   @id @default(uuid())
+  question  String
+  answer    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TrustSignal {
+  id        String   @id @default(uuid())
+  label     String
+  value     Int
+  suffix    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
