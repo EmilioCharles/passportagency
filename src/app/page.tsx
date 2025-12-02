@@ -19,7 +19,7 @@ export default async function Home() {
     orderBy: { createdAt: "desc" },
   });
 
-  const faqs = await db.fAQ.findMany({
+  const faqs = await db.faq.findMany({
     take: 5,
     orderBy: { createdAt: "asc" },
   });

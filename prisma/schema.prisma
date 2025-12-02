@@ -96,7 +96,7 @@ model Testimonial {
   updatedAt DateTime @updatedAt
 }
 
-model FAQ {
+model Faq {
   id        String   @id @default(uuid())
   question  String
   answer    String

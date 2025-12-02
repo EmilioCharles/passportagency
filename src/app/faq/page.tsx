@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 
 export default async function FAQPage() {
-    const faqs = await db.fAQ.findMany({
+    const faqs = await db.faq.findMany({
         orderBy: { createdAt: "asc" },
     });
 
@@ -20,7 +20,7 @@ export default async function FAQPage() {
 
                 {/* FAQ List */}
                 <div className="max-w-4xl mx-auto space-y-4">
-                    {faqs.map((faq) => (
+                    {faqs.map((faq: { id: string; question: string; answer: string }) => (
                         <details
                             key={faq.id}
                             className="bg-white rounded-lg shadow-md p-6 group"

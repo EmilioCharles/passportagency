@@ -8,7 +8,10 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { motion, AnimatePresence } from "framer-motion";
 import { Calendar, MapPin, Video, Globe, ArrowRight, ArrowLeft, Check } from "lucide-react";
 import { useState, useEffect, Suspense } from "react";
+import Cal, { getCalApi } from "@calcom/embed-react";
 import { useSearchParams } from "next/navigation";
+
+import { generateMeeting } from "@/app/actions/meet";
 
 type Step = "location" | "details" | "schedule";
 type LocationType = "uganda" | "abroad";
@@ -26,6 +29,26 @@ function WizardContent() {
     const [location, setLocation] = useState<LocationType | null>(null);
     const [timezone, setTimezone] = useState<string>("");
     const [serviceType, setServiceType] = useState<string>("Regular Passport");
+    const [meetingLink, setMeetingLink] = useState<string | null>(null);
+    const [isGeneratingMeeting, setIsGeneratingMeeting] = useState(false);
+    const [meetingError, setMeetingError] = useState<string | null>(null);
+
+    const handleGenerateMeeting = async () => {
+        setIsGeneratingMeeting(true);
+        setMeetingError(null);
+        try {
+            const result = await generateMeeting();
+            if (result.success && result.link) {
+                setMeetingLink(result.link);
+            } else {
+                setMeetingError(result.error || "Failed to generate link");
+            }
+        } catch (err) {
+            setMeetingError("An unexpected error occurred");
+        } finally {
+            setIsGeneratingMeeting(false);
+        }
+    };
 
     const searchParams = useSearchParams();
 
@@ -66,6 +89,17 @@ function WizardContent() {
         if (step === "details") setStep("location");
         else if (step === "schedule") setStep("details");
     };
+
+    useEffect(() => {
+        (async function () {
+            const cal = await getCalApi({ namespace: "consultation" });
+            cal("ui", {
+                styles: { branding: { brandColor: "#FFD500" } },
+                hideEventTypeDetails: false,
+                layout: "month_view",
+            });
+        })();
+    }, []);
 
     return (
         <div className="w-full max-w-4xl mx-auto p-4">
@@ -140,7 +174,7 @@ function WizardContent() {
                                 <CardDescription>
                                     {location === "uganda"
                                         ? "We are located at Zana, Entebbe Road. Open Mon-Sat, 8am - 6pm."
-                                        : "Schedule a secure video call via Zoom or Google Meet."}
+                                        : "Schedule a secure video call via Google Meet."}
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-6">
@@ -155,13 +189,47 @@ function WizardContent() {
                                 ) : (
                                     <div className="bg-blue-50 p-6 rounded-lg border border-blue-100">
                                         <div className="flex items-start gap-4">
-                                            <Video className="w-6 h-6 text-blue-600 mt-1" />
-                                            <div>
-                                                <h4 className="font-semibold text-nshara-blue">Timezone Detected</h4>
-                                                <p className="text-sm text-gray-600">
-                                                    We've detected your timezone as <span className="font-bold text-nshara-blue">{timezone}</span>.
-                                                    All appointment slots will be shown in your local time.
+                                            <div className="bg-white p-2 rounded-full shadow-sm">
+                                                <Video className="w-6 h-6 text-blue-600" />
+                                            </div>
+                                            <div className="flex-1">
+                                                <h4 className="font-semibold text-nshara-blue flex items-center gap-2">
+                                                    Google Meet Integration
+                                                    <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full font-medium">Active</span>
+                                                </h4>
+                                                <p className="text-sm text-gray-600 mt-1 mb-3">
+                                                    Generate a secure Google Meet link for your consultation ({timezone}).
                                                 </p>
+
+                                                {!meetingLink ? (
+                                                    <Button
+                                                        onClick={handleGenerateMeeting}
+                                                        disabled={isGeneratingMeeting}
+                                                        size="sm"
+                                                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                                                    >
+                                                        {isGeneratingMeeting ? (
+                                                            <>Generating...</>
+                                                        ) : (
+                                                            <>Generate Meeting Link</>
+                                                        )}
+                                                    </Button>
+                                                ) : (
+                                                    <div className="mt-2 p-3 bg-white rounded border border-blue-200">
+                                                        <p className="text-xs text-gray-500 mb-1">Meeting Link Generated:</p>
+                                                        <a
+                                                            href={meetingLink}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="text-blue-600 font-medium underline break-all flex items-center gap-1"
+                                                        >
+                                                            {meetingLink} <ArrowRight className="w-3 h-3" />
+                                                        </a>
+                                                    </div>
+                                                )}
+                                                {meetingError && (
+                                                    <p className="text-red-500 text-sm mt-2">{meetingError}</p>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -196,12 +264,20 @@ function WizardContent() {
                                 <CardDescription>Scheduling for: <span className="font-bold text-nshara-yellow">{serviceType}</span></CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <div className="aspect-[4/3] bg-gray-50 rounded-lg flex items-center justify-center border border-gray-200">
-                                    <div className="text-center text-gray-500">
-                                        <Calendar className="w-12 h-12 mx-auto mb-2 text-nshara-blue" />
-                                        <p>Cal.com Embed Placeholder</p>
-                                        <p className="text-sm">The scheduling widget will appear here.</p>
-                                    </div>
+                                <div className="w-full h-full min-h-[600px] bg-white rounded-lg overflow-hidden">
+                                    <Cal
+                                        namespace="consultation"
+                                        calLink="nshara-expedition/consultation"
+                                        style={{ width: "100%", height: "100%", overflow: "scroll" }}
+                                        config={{
+                                            layout: "month_view",
+                                            metadata: {
+                                                location: location || "unknown",
+                                                serviceType: serviceType,
+                                                timezone: timezone
+                                            }
+                                        }}
+                                    />
                                 </div>
                             </CardContent>
                             <CardFooter className="flex justify-between pt-6">
@@ -242,7 +318,16 @@ function StepIndicator({ currentStep, step, label, number }: { currentStep: Step
     );
 }
 
-function LocationOption({ id, title, description, icon: Icon, selected, onClick }: any) {
+interface LocationOptionProps {
+    id: string;
+    title: string;
+    description: string;
+    icon: React.ElementType;
+    selected: boolean;
+    onClick: () => void;
+}
+
+function LocationOption({ id, title, description, icon: Icon, selected, onClick }: LocationOptionProps) {
     return (
         <div
             onClick={onClick}
