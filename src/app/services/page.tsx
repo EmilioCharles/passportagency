@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Check, Globe, Briefcase, ShieldCheck, FileText } from "lucide-react";
 import Link from "next/link";
 
-import { Service } from "@/generated/client/client";
+import { Service } from "@prisma/client";
 
 import { db } from "@/lib/db";
 

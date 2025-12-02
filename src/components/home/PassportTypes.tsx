@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { ArrowRight, Briefcase, Globe, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 
-import { Service } from "@/generated/client/client";
+import { Service } from "@prisma/client";
 
 const iconMap: Record<string, any> = {
     Globe: Globe,

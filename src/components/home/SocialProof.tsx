@@ -3,7 +3,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Star } from "lucide-react";
 
-import { Testimonial } from "@/generated/client/client";
+import { Testimonial } from "@prisma/client";
 
 import { motion } from "framer-motion";
 

@@ -7,7 +7,7 @@ import {
     AccordionTrigger,
 } from "@/components/ui/accordion";
 
-import { FAQ as FAQModel } from "@/generated/client/client";
+import { FAQ as FAQModel } from "@prisma/client";
 
 interface FAQProps {
     faqs: FAQModel[];

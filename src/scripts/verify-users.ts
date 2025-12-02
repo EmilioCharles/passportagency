@@ -11,7 +11,7 @@ async function main() {
         console.log('No users found in database.')
     } else {
         console.log('Latest 5 users found:')
-        console.table(users.map(u => ({
+        console.table(users.map((u: any) => ({
             id: u.id,
             email: u.email,
 
@@ -21,7 +21,7 @@ async function main() {
 }
 
 main()
-    .catch(e => {
+    .catch((e: any) => {
         console.error(e)
         process.exit(1)
     })
